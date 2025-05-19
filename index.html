@@ -1,108 +1,96 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Fast LocalStorage Chat</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      margin: 0;
-      padding: 40px;
-      display: flex;
-      justify-content: center;
-    }
-
-    .chat-container {
-      background: #fff;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      width: 100%;
-      max-width: 700px;
-      padding: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      display: flex;
-      flex-direction: column;
-      height: 80vh;
-    }
-
-    #namePrompt {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-
-    #chatSection {
-      display: none;
-      flex-grow: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .messages {
-      flex-grow: 1;
-      overflow-y: auto;
-      border: 1px solid #ddd;
-      padding: 15px;
-      margin-bottom: 20px;
-      background: #fafafa;
-      border-radius: 6px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      min-height: 0;
-      word-break: break-word;
-    }
-
-    .message {
-      background-color: #e8e8e8;
-      border-radius: 6px;
-      padding: 12px 16px;
-      min-width: 100%;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-
-    .message b {
-      color: #222;
-    }
-
-    .input-area {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-
-    input[type="text"] {
-      flex-grow: 1;
-      padding: 14px 16px;
-      font-size: 1.15rem;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      outline-offset: 2px;
-      outline-color: #4285f4;
-    }
-
-    button {
-      padding: 14px 24px;
-      font-size: 1.15rem;
-      background-color: #4285f4;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-
-    button:hover:not(:disabled) {
-      background-color: #3367d6;
-    }
-
-    button:disabled {
-      background-color: #aaa;
-      cursor: not-allowed;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Firebase Realtime Chat</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f4f4f4;
+    margin: 0; padding: 40px;
+    display: flex; justify-content: center;
+  }
+  .chat-container {
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 700px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    height: 80vh;
+  }
+  #namePrompt {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  #chatSection {
+    display: none;
+    flex-grow: 1;
+    flex-direction: column;
+    display: flex;
+  }
+  .messages {
+    flex-grow: 1;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-bottom: 20px;
+    background: #fafafa;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+    word-break: break-word;
+  }
+  .message {
+    background-color: #e8e8e8;
+    border-radius: 6px;
+    padding: 12px 16px;
+    min-width: 100%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .message b {
+    color: #222;
+  }
+  .input-area {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  input[type="text"] {
+    flex-grow: 1;
+    padding: 14px 16px;
+    font-size: 1.15rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    outline-offset: 2px;
+    outline-color: #4285f4;
+  }
+  button {
+    padding: 14px 24px;
+    font-size: 1.15rem;
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  button:hover:not(:disabled) {
+    background-color: #3367d6;
+  }
+  button:disabled {
+    background-color: #aaa;
+    cursor: not-allowed;
+  }
+</style>
 </head>
 <body>
   <div class="chat-container">
@@ -122,7 +110,25 @@
     </div>
   </div>
 
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
   <script>
+    // Paste your config here:
+    const firebaseConfig = {
+  apiKey: "AIzaSyDm8u6BizotcGBM-TXOTAstEgLs4G8mIJM",
+  authDomain: "mychatapp-a0e8f.firebaseapp.com",
+  databaseURL: "https://mychatapp-a0e8f-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "mychatapp-a0e8f",
+  storageBucket: "mychatapp-a0e8f.firebasestorage.app",
+  messagingSenderId: "1028739361226",
+  appId: "1:1028739361226:web:bf28fae741e3fa03a2c733"
+};
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
     let userName = '';
     const nameInput = document.getElementById('nameInput');
     const joinBtn = document.getElementById('joinBtn');
@@ -140,11 +146,12 @@
         namePrompt.style.display = 'none';
         chatSection.style.display = 'flex';
         messageInput.focus();
-        loadMessages();
+        startListening();
       }
     };
 
     sendBtn.onclick = sendMessage;
+
     messageInput.addEventListener('keydown', e => {
       if (e.key === 'Enter') sendMessage();
     });
@@ -153,61 +160,42 @@
       if (e.key === 'Enter') joinBtn.click();
     });
 
-    function loadMessages() {
-      // Initial render
-      renderMessages(getMessages());
-
-      // Poll every 500 ms to sync localStorage changes
-      setInterval(() => {
-        renderMessages(getMessages());
-      }, 500);
-    }
-
-    function getMessages() {
-      const msgs = localStorage.getItem('chatMessages');
-      return msgs ? JSON.parse(msgs) : [];
-    }
-
-    function saveMessages(messages) {
-      localStorage.setItem('chatMessages', JSON.stringify(messages));
-    }
-
-    function renderMessages(messages) {
-      // To avoid unnecessary DOM refresh, only update if message count changes or last message changes
-      const currentCount = chatBox.children.length;
-      if (currentCount === messages.length) {
-        const lastMsgInDOM = chatBox.lastChild ? chatBox.lastChild.textContent : '';
-        const lastMsgInData = messages.length ? `${messages[messages.length-1].name}: ${messages[messages.length-1].message}` : '';
-        if (lastMsgInDOM === lastMsgInData) return; // no change
-      }
-
-      chatBox.innerHTML = '';
-      messages.forEach(({name, message}) => {
-        const msgDiv = document.createElement('div');
-        msgDiv.classList.add('message');
-        msgDiv.innerHTML = `<b>${escapeHtml(name)}:</b> ${escapeHtml(message)}`;
-        chatBox.appendChild(msgDiv);
-      });
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
     function sendMessage() {
       const message = messageInput.value.trim();
       if (message === '') return;
-
-      const messages = getMessages();
-      messages.push({name: userName, message});
-      saveMessages(messages);
-
+      const newMsgRef = db.ref('messages').push();
+      newMsgRef.set({
+        name: userName,
+        message: message,
+        timestamp: Date.now()
+      });
       messageInput.value = '';
       messageInput.focus();
+    }
 
-      renderMessages(messages);
+    function startListening() {
+      db.ref('messages').on('value', snapshot => {
+        chatBox.innerHTML = '';
+        const messages = snapshot.val();
+        if (messages) {
+          const sortedMsgs = Object.values(messages).sort((a,b) => a.timestamp - b.timestamp);
+          sortedMsgs.forEach(({name, message}) => {
+            addMessageToChat(name, message);
+          });
+          chatBox.scrollTop = chatBox.scrollHeight;
+        }
+      });
+    }
+
+    function addMessageToChat(name, message) {
+      const msgDiv = document.createElement('div');
+      msgDiv.classList.add('message');
+      msgDiv.innerHTML = `<b>${escapeHtml(name)}:</b> ${escapeHtml(message)}`;
+      chatBox.appendChild(msgDiv);
     }
 
     clearBtn.onclick = () => {
-      localStorage.removeItem('chatMessages');
-      chatBox.innerHTML = '';
+      db.ref('messages').remove();
       clearBtn.disabled = true;
       setTimeout(() => {
         clearBtn.disabled = false;
