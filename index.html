@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Static Wide Chat</title>
+  <title>Fast LocalStorage Chat</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -51,7 +51,7 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
-      min-height: 0; /* important for flexbox scrolling */
+      min-height: 0;
       word-break: break-word;
     }
 
@@ -140,11 +140,11 @@
         namePrompt.style.display = 'none';
         chatSection.style.display = 'flex';
         messageInput.focus();
+        loadMessages();
       }
     };
 
     sendBtn.onclick = sendMessage;
-
     messageInput.addEventListener('keydown', e => {
       if (e.key === 'Enter') sendMessage();
     });
@@ -153,19 +153,60 @@
       if (e.key === 'Enter') joinBtn.click();
     });
 
+    function loadMessages() {
+      // Initial render
+      renderMessages(getMessages());
+
+      // Poll every 500 ms to sync localStorage changes
+      setInterval(() => {
+        renderMessages(getMessages());
+      }, 500);
+    }
+
+    function getMessages() {
+      const msgs = localStorage.getItem('chatMessages');
+      return msgs ? JSON.parse(msgs) : [];
+    }
+
+    function saveMessages(messages) {
+      localStorage.setItem('chatMessages', JSON.stringify(messages));
+    }
+
+    function renderMessages(messages) {
+      // To avoid unnecessary DOM refresh, only update if message count changes or last message changes
+      const currentCount = chatBox.children.length;
+      if (currentCount === messages.length) {
+        const lastMsgInDOM = chatBox.lastChild ? chatBox.lastChild.textContent : '';
+        const lastMsgInData = messages.length ? `${messages[messages.length-1].name}: ${messages[messages.length-1].message}` : '';
+        if (lastMsgInDOM === lastMsgInData) return; // no change
+      }
+
+      chatBox.innerHTML = '';
+      messages.forEach(({name, message}) => {
+        const msgDiv = document.createElement('div');
+        msgDiv.classList.add('message');
+        msgDiv.innerHTML = `<b>${escapeHtml(name)}:</b> ${escapeHtml(message)}`;
+        chatBox.appendChild(msgDiv);
+      });
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
     function sendMessage() {
       const message = messageInput.value.trim();
       if (message === '') return;
-      const msgDiv = document.createElement('div');
-      msgDiv.classList.add('message');
-      msgDiv.innerHTML = `<b>${escapeHtml(userName)}:</b> ${escapeHtml(message)}`;
-      chatBox.appendChild(msgDiv);
-      chatBox.scrollTop = chatBox.scrollHeight;
+
+      const messages = getMessages();
+      messages.push({name: userName, message});
+      saveMessages(messages);
+
       messageInput.value = '';
       messageInput.focus();
+
+      renderMessages(messages);
     }
 
     clearBtn.onclick = () => {
+      localStorage.removeItem('chatMessages');
       chatBox.innerHTML = '';
       clearBtn.disabled = true;
       setTimeout(() => {
